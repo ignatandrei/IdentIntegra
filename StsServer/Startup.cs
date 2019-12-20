@@ -11,6 +11,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Server.IISIntegration;
 using IdentityServer4;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using System.Threading.Tasks;
+using Microsoft.IdentityModel.Logging;
 
 namespace StsServer
 {
@@ -25,19 +28,27 @@ namespace StsServer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            IdentityModelEventSource.ShowPII = true;
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
+            string clientId = "f59d5739-1ec9-46fc-961d-b01ef6fb3c51";
+            string tenantId = "36946883-9d0b-4229-82f9-316f0ae71b20";
+            //tenantId = "https://ignatandreiyahoo.onmicrosoft.com";
             services
+                   
                 .AddAuthentication(IISDefaults.AuthenticationScheme)
                 .AddOpenIdConnect("aad", "Sign-in with Azure AD", options =>
                 {
-                    options.Authority = "https://login.microsoftonline.com/common";
-                    options.ClientId = "https://leastprivilegelabs.onmicrosoft.com/38196330-e766-4051-ad10-14596c7e97d3";
+                    //options.Authority = $"https://login.microsoftonline.com/common/v2.0/";
+                    //options.Authority = $"https://ignatandreiyahoo.onmicrosoft.com";
+                    options.Authority = $"https://login.windows.net/{tenantId}";
+                    options.ClientId = $"{clientId}";
+                    //options.RequireHttpsMetadata = true;
+                    
 
                     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
                     options.SignOutScheme = IdentityServerConstants.SignoutScheme;
@@ -50,14 +61,24 @@ namespace StsServer
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = false,
-                        ValidAudience = "165b99fd-195f-4d93-a111-3e679246e6a9",
+                        //ValidAudience = "f59d5739-1ec9-46fc-961d-b01ef6fb3c51",
 
                         NameClaimType = "name",
                         RoleClaimType = "role"
                     };
+                    options.Events.OnRemoteFailure = (context) =>
+                    {
+                        string s = context.ToString();
+                        return Task.CompletedTask;
+                    };
                 })
 
                 ;
+                services.AddOidcStateDataFormatterCache("aad");
+            //services.Configure<OpenIdConnectOptions>("AzureADOpenID", options =>
+            //{
+            //    options.Authority = options.Authority + "/v2.0/";
+            //});
             //services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             //        .AddNegotiate(); 
             services.Configure<IISOptions>(iis =>
