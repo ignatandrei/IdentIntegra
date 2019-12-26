@@ -161,6 +161,8 @@ namespace IdentityServer4.Quickstart.UI
             var result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
             if (result?.Succeeded != true)
             {
+                result = await HttpContext.AuthenticateAsync("aad");
+                if (result?.Succeeded != true)
                 throw new Exception("External authentication error");
             }
 

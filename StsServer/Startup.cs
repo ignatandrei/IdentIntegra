@@ -14,6 +14,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.AspNetCore.HttpOverrides;
+using IdentityServer4.Services;
 
 namespace StsServer
 {
@@ -28,32 +31,47 @@ namespace StsServer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = Microsoft.AspNetCore.Http.SameSiteMode.None;
+            });
+
+
             IdentityModelEventSource.ShowPII = true;
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
+            //services.AddTransient<IProfileService, IdentityWithAdditionalClaimsProfileService>();
+            
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             string clientId = "f59d5739-1ec9-46fc-961d-b01ef6fb3c51";
             string tenantId = "36946883-9d0b-4229-82f9-316f0ae71b20";
+            tenantId = "740b1285-7688-4efd-87a6-10f081277258";
+            clientId = "d6bffd5d-911b-4f48-8521-b633c260a68c";
+            tenantId = "common";
             //tenantId = "https://ignatandreiyahoo.onmicrosoft.com";
             services
-                   
+
                 .AddAuthentication(IISDefaults.AuthenticationScheme)
                 .AddOpenIdConnect("aad", "Sign-in with Azure AD", options =>
                 {
                     //options.Authority = $"https://login.microsoftonline.com/common/v2.0/";
                     //options.Authority = $"https://ignatandreiyahoo.onmicrosoft.com";
-                    options.Authority = $"https://login.windows.net/{tenantId}";
+                    //options.Authority = $"https://login.windows.net/{tenantId}";
+                    options.Authority = "https://login.microsoftonline.com/common/v2.0/";
                     options.ClientId = $"{clientId}";
                     //options.RequireHttpsMetadata = true;
-                    
+                    options.RemoteAuthenticationTimeout = new System.TimeSpan(0,1,58);
 
                     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
                     options.SignOutScheme = IdentityServerConstants.SignoutScheme;
 
-                    options.ResponseType = "id_token";
+                    options.ResponseType = OpenIdConnectResponseType.IdToken; //"id_token";
                     options.CallbackPath = "/signin-aad";
                     options.SignedOutCallbackPath = "/signout-callback-aad";
                     options.RemoteSignOutPath = "/signout-aad";
@@ -103,6 +121,8 @@ namespace StsServer
 
             services.AddControllersWithViews()
                  .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            
+            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -130,6 +150,7 @@ namespace StsServer
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            app.UseCookiePolicy();
 
         }
     }
