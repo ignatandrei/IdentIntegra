@@ -1,3 +1,11 @@
+<script type="text/javascript" src="syntaxhighlighter-3.0.83/scripts/XRegExp.js"></script> <!-- XRegExp is bundled with the final shCore.js during build -->
+<script type="text/javascript" src="syntaxhighlighter-3.0.83/scripts/shCore.js"></script>
+<script type="text/javascript" src="syntaxhighlighter-3.0.83/scripts/shBrushJScript.js"></script>
+<script type="text/javascript" src="syntaxhighlighter-3.0.83/scripts/shBrushCSharp.js"></script>
+<link type="text/css" rel="stylesheet" href="syntaxhighlighter-3.0.83/styles/shCore.css"/>
+<link type="text/css" rel="Stylesheet" href="syntaxhighlighter-3.0.83/styles/shThemeDefault.css" />
+<script type="text/javascript">SyntaxHighlighter.all();</script>
+
 <h1>Documentation integrating Identity Server with BD, Windows AD and Azure AAD</h1>
 
 <h2>Run the project</h2>
@@ -12,8 +20,84 @@ The following screen should show :
 
 
 <br />
-<h2>Code Integration with BD</h2>
+
+<h2>Code Integration with local database</h2>
+I have used Sqlite , since it does not require any installation of Server
+
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+    services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
+    services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
+
+]]></script>
+When the user signs in with UserName and Password, the following code is called
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+public class AccountController : Controller
+{
+    //ommitted code
+    public async Task<IActionResult> Login(LoginInputModel model, string button){
+    //ommitted  code
+        if (ModelState.IsValid)
+        {
+            var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+            if (result.Succeeded)
+            {
+                var user = await _userManager.FindByNameAsync(model.Username);
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
+
+        //ommitted code
+        }
+    }
+}
+    ]]></script>
+
+The events are for notifying IdentityServer about our user
+
+<h2>External  Integration - with local Active Directory</h2>
 See in Startup.cs the following
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+    services.Configure<IISOptions>(iis =>
+        {
+            iis.AuthenticationDisplayName = "Windows";
+            iis.AutomaticAuthentication = true;
+        });
+]]></script>
+When the user clicks the Windows authenticatio the following code is called
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+public class AccountController : Controller
+{
+    //ommitted code
+    [HttpGet]
+    public async Task<IActionResult> ExternalLogin(string provider, string returnUrl)
+    {
+        if (AccountOptions.WindowsAuthenticationSchemeName == provider)
+        {
+            // windows authentication needs special handling
+            return await ProcessWindowsLoginAsync(returnUrl);
+        }
+        //ommitted code
+    }
+    //ommitted code
+    private async Task<IActionResult> ProcessWindowsLoginAsync(string returnUrl)
+        {
+            // see if windows auth has already been requested and succeeded
+            var result = await HttpContext.AuthenticateAsync(AccountOptions.WindowsAuthenticationSchemeName);
+            if (result?.Principal is WindowsPrincipal wp)
+            {
+                //ommitted code
+            }
+            else
+            {
+                // trigger windows auth
+                // since windows auth don't support the redirect uri,
+                // this URL is re-triggered when we call challenge
+                return Challenge(AccountOptions.WindowsAuthenticationSchemeName);
+            }
+        }
+}
+]]></script>
 
-
-
+<h2>External  Integration - with Azure Active Directory</h2>
