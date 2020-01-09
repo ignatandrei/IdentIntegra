@@ -199,14 +199,14 @@ This implies to go to portal.azure.com.
 
 <br />
 First you create a new application in the Azure Active Directory
-<img src="images/newApp.png" />
+<img src="images/newApp.png" width="360" height="180" />
 Please retain the applicationId in order to put to the code
 <script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
     options.ClientId = $"{clientId}";
     ]]></script>
 
 Do not forget about checking the token on authentication
-<img src="images/newAppToken.png" />
+<img src="images/newAppToken.png" width="360" height="180" />
 because of this code
 <script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
     options.ResponseType = OpenIdConnectResponseType.IdToken; //"id_token";
@@ -221,6 +221,8 @@ because of this code
     };
 
     ]]></script>
+
+        
 
 
 
