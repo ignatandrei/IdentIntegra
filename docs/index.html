@@ -7,14 +7,19 @@
 <script type="text/javascript">SyntaxHighlighter.all();</script>
 
 <h1>Documentation integrating Identity Server with BD, Windows AD and Azure AAD</h1>
+<h2>
+    Code copied and improved from 
+    <a href='https://github.com/damienbod/AspNetCoreWindowsAuth' target="_blank">
+    https://github.com/damienbod/AspNetCoreWindowsAuth</a>
 
+</h2>
 <h2>Run the project</h2>
 
-Download Sources.
+Download Sources.<br />
 
-Run the project AspNetCoreWindowsAuth.sln .
+Run the project AspNetCoreWindowsAuth.sln .<br />
 
-The following screen should show :
+The following screen should show :<br />
 <br />
 <img src="images/startScreen.png" width="360" height="180" />
 
@@ -200,13 +205,14 @@ This implies to go to portal.azure.com.
 <br />
 First you create a new application in the Azure Active Directory
 <img src="images/newApp.png" width="360" height="180" />
+<br />
 Please retain the applicationId in order to put to the code
 <script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
     options.ClientId = $"{clientId}";
     ]]></script>
-
-Do not forget about checking the token on authentication
-<img src="images/newAppToken.png" width="360" height="180" />
+<br />
+Do not forget about checking the token on authentication<br />
+<img src="images/newAppToken.png" width="360" height="180" /><br />
 because of this code
 <script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
     options.ResponseType = OpenIdConnectResponseType.IdToken; //"id_token";
