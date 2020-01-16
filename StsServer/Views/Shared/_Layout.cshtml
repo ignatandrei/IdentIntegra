@@ -1,9 +1,16 @@
 ﻿@using IdentityServer4.Extensions
+@using System.Security.Claims;
 @{
     string name = null;
+    Claim[] claims = new Claim[0];
     if (!true.Equals(ViewData["signed-out"]))
     {
         name = Context.User?.GetDisplayName();
+        if(name != null)
+        {
+            claims = Context.User.Claims.ToArray();
+        }
+        
     }
 }
 <!DOCTYPE html>
@@ -31,7 +38,7 @@
             <div class="main-menu">
                 <div class="dropdown">
                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownLangButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        @name
+                        @name  ( Claims number: @claims.Length )
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownLangButton">
                         <a asp-area="" asp-controller="Account" asp-action="Logout" class="dropdown-item">Logout</a>
@@ -46,7 +53,13 @@
         <div class="container body-content">
             @RenderBody()
         </div>
+        @for(var c = 0; c < claims.Length; c++)
+        {
+            var claim = claims[c];
+<div> @c => Type: @claim.Type , Value: @claim.Value , Properties: @claim.Properties.Count
 
+</div>
+        }
         <script src="~/js/vendor.min.js" asp-append-version="true"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
 
