@@ -121,8 +121,13 @@ namespace StsServer
 
             services.AddControllersWithViews()
                  .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-            
-            
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MyGroupPolicy", policy => policy.RequireClaim(@"SURFACEANDREI\MyGroup"));
+            });
+
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -143,7 +148,6 @@ namespace StsServer
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
