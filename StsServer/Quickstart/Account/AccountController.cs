@@ -191,11 +191,11 @@ namespace IdentityServer4.Quickstart.UI
             // it doesn't expose an API to issue additional claims from the login workflow
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
 
-            //foreach(var claim in claims)
-            //{
-            //    additionalLocalClaims.AddRange(claims);
-            //}
-            
+            foreach (var claim in claims)
+            {
+                additionalLocalClaims.AddRange(claims);
+            }
+
             additionalLocalClaims.AddRange(principal.Claims);
             var name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? user.Id;
             await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id, name));
