@@ -124,7 +124,7 @@ namespace StsServer
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("MyGroupPolicy", policy => policy.RequireClaim(@"SURFACEANDREI\MyGroup"));
+                options.AddPolicy("MyGroupPolicy", policy => policy.RequireClaim("role",@"MyGroup"));
             });
 
 
