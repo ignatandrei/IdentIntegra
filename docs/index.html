@@ -235,6 +235,87 @@ because of this code
 
 And that is all that needs to be done.
 
+<h1> Roles for Windows</h1>
 
+In Computer Management, I define the user : testUser that belongs to MyGroup
+<br />
+
+<img src="images/testUser.png"  width="360" height="180"/>
+
+<br />
+
+In startup.cs I define the Policy for this:
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MyGroupPolicy", policy => policy.RequireClaim("role",@"MyGroup"));
+            });
+    ]]></script>
+
+I also define an Controller that require this policy
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+public class TestController : Controller
+{
+	[Authorize(Policy="MyGroupPolicy")]
+	public IActionResult Index()
+	{
+		return Content(" you can see this because you are authorized to see MyGroupPolicy");
+	}
+}
+    ]]></script>
+
+So now if you logon on Windows with testuser, it will require the policy to be satisfied
+<br /><br /><br /><br />
+Now, to understand the code
+<br />
+Read 
+<a href='https://docs.microsoft.com/en-us/aspnet/core/security/authorization/claims?view=aspnetcore-3.1' >
+https://docs.microsoft.com/en-us/aspnet/core/security/authorization/claims?view=aspnetcore-3.1#multiple-policy-evaluation
+</a>
+and
+<a href='https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-3.1'>
+https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-3.1
+</a>
+<br />
+Now some more code:
+<br />
+Transforming Groups to role claims
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+string pcName = Environment.MachineName;
+// add the groups as claims -- be careful if the number of groups is too large
+if (AccountOptions.IncludeWindowsGroups)
+{
+	var wi = wp.Identity as WindowsIdentity;
+	var groups = wi.Groups.Translate(typeof(NTAccount));
+	
+	var roles = groups
+		.Select(it=>it.Value)
+		.Select(it=> it.StartsWith(pcName +"\\",StringComparison.InvariantCultureIgnoreCase)?
+					it.Substring(pcName.Length+1): it)                        
+		.Select(x => new Claim(JwtClaimTypes.Role, x));
+	id.AddClaims(roles);
+}
+    ]]></script>
+
+And putting back to user	
+<script type="syntaxhighlighter" class="brush: csharp;"><![CDATA[
+[HttpGet]
+public async Task<IActionResult> ExternalLoginCallback()
+{
+//omitted code
+	// lookup our user and external provider info
+	var (user, provider, providerUserId, claims) = await FindUserFromExternalProviderAsync(result);
+//omitted code
+    var principal = await _signInManager.CreateUserPrincipalAsync(user);
+
+	foreach (var claim in claims)
+	{
+		additionalLocalClaims.AddRange(claims);
+	}
+//ommitted code
+	await HttpContext.SignInAsync(user.Id, name, provider, localSignInProps, additionalLocalClaims.ToArray());
+
+
+    ]]></script>
 
 
