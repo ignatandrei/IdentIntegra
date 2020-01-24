@@ -8,7 +8,7 @@
         name = Context.User?.GetDisplayName();
         if(name != null)
         {
-            claims = Context.User.Claims.ToArray();
+            claims = Context.User.Claims.OrderBy(it=>it.Type).ToArray();
         }
         
     }
@@ -59,8 +59,14 @@
         @for(var c = 0; c < claims.Length; c++)
         {
             var claim = claims[c];
-<div> @c => Type: @claim.Type , Value: @claim.Value , Properties: @claim.Properties.Count
-
+<div>
+    @c => Type: @claim.Type , Value: @claim.Value , Properties: @claim.Properties.Count
+    @if (claim.Properties.Count > 0)
+    {
+    <text>
+        Prop : @claim.Properties.First().Key  Value @claim.Properties.First().Value
+    </text>
+    }
 </div>
         }
         <script src="~/js/vendor.min.js" asp-append-version="true"></script>

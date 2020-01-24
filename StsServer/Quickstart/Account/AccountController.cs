@@ -164,7 +164,10 @@ namespace IdentityServer4.Quickstart.UI
             {
                 result = await HttpContext.AuthenticateAsync("aad");
                 if (result?.Succeeded != true)
-                throw new Exception("External authentication error");
+                    throw new Exception("External authentication error");
+
+                var id_token = result.Properties.GetTokenValue("id_token");
+                //id_token += "Andrei";
             }
 
             // lookup our user and external provider info
@@ -439,7 +442,7 @@ namespace IdentityServer4.Quickstart.UI
                         .Select(it=>it.Value)
                         .Select(it=> it.StartsWith(pcName +"\\",StringComparison.InvariantCultureIgnoreCase)?
                                     it.Substring(pcName.Length+1): it)                        
-                        .Select(x => new Claim(JwtClaimTypes.Role, x));
+                        .Select(x => new Claim("groups", x));
                     id.AddClaims(roles);
                 }
 

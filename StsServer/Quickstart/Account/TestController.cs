@@ -12,7 +12,15 @@ namespace StsServer.Quickstart.Account
         [Authorize(Policy="MyGroupPolicy")]
         public IActionResult Index()
         {
+            //this.User.Claims.First(it=>it.Value == "views").pr
             return Content(" you can see this because you are authorized to see MyGroupPolicy");
+        }
+
+        [Authorize(Policy = "AzurePOL")]
+        public IActionResult Index1()
+        {
+            //this.User.Claims.First(it=>it.Value == "views").pr
+            return Content(" azure policy enabled");
         }
     }
 }

@@ -54,12 +54,14 @@ namespace StsServer
             tenantId = "740b1285-7688-4efd-87a6-10f081277258";
             clientId = "d6bffd5d-911b-4f48-8521-b633c260a68c";
             tenantId = "common";
+            clientId= "46fad081-f3b2-4137-a7b4-d1834133cead";
             //tenantId = "https://ignatandreiyahoo.onmicrosoft.com";
             services
 
                 .AddAuthentication(IISDefaults.AuthenticationScheme)
                 .AddOpenIdConnect("aad", "Sign-in with Azure AD", options =>
                 {
+                    options.SaveTokens = true;
                     //options.Authority = $"https://login.microsoftonline.com/common/v2.0/";
                     //options.Authority = $"https://ignatandreiyahoo.onmicrosoft.com";
                     //options.Authority = $"https://login.windows.net/{tenantId}";
@@ -89,6 +91,13 @@ namespace StsServer
                         string s = context.ToString();
                         return Task.CompletedTask;
                     };
+                    options.Events.OnTicketReceived = (context) =>
+                    {
+                        var s = context.GetType();
+                        s = s;
+                        return Task.CompletedTask;
+                    };
+                    
                 })
 
                 ;
@@ -111,6 +120,7 @@ namespace StsServer
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
+
             })
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryApiResources(Config.GetApis())
@@ -124,7 +134,16 @@ namespace StsServer
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("MyGroupPolicy", policy => policy.RequireClaim("role",@"MyGroup"));
+                options.AddPolicy("MyGroupPolicy", 
+                    
+                    policy => policy.RequireClaim("role", @"testAndreiGroup")
+                    );
+
+
+                options.AddPolicy("AzurePOL",
+
+                    policy => policy.RequireClaim("groups", @"8192a0ef-4685-4c41-bcae-073957197650")
+                    );
             });
 
 
